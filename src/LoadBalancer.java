@@ -8,6 +8,7 @@ public class LoadBalancer {
 
     // public variables
     public static volatile HashMap<String, Socket> nodeToSocket;
+    public static volatile HashMap<String, Socket> nodeToSenderSocket;
     public static volatile ArrayList<String> nodes;
     public static Integer position;
 
@@ -15,13 +16,15 @@ public class LoadBalancer {
     public static void main(String[] args) {
 
         /// initializing static objects
-        position = 0;
         nodeToSocket = new HashMap<>();
+        nodeToSenderSocket = new HashMap<>();
+        position = 0;
         nodes = new ArrayList<>();
 
         try{
-            int prt = 3881; /// TODO prt = args[0]
-            ServerSocket srvSocket = new ServerSocket(prt);
+            Integer prt = 3881;
+            if(args.length == 1)
+                prt = Integer.parseInt(args[0]);
 
             System.out.println("================================================================");
             System.out.println("LoadBalancer successfully started.");
@@ -29,6 +32,7 @@ public class LoadBalancer {
             System.out.println("Port: " + prt);
             System.out.println("================================================================\n");
 
+            ServerSocket srvSocket = new ServerSocket(prt);
             while(true){
                 Socket clientSocket = srvSocket.accept();
                 LoadBalancerThread loadBalancerThread = new LoadBalancerThread(clientSocket);

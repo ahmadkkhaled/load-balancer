@@ -1,42 +1,36 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
 public class Node {
     public static void main(String[] args) {
         try{
-            Socket socket = new Socket("127.0.0.1", 3881);
+            Integer port = 3881;
+            String address = "127.0.0.1";
 
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            if(args.length == 2){
+                address = args[0];
+                port = Integer.parseInt(args[1]);
+            }
 
             String nodeID = "" + System.currentTimeMillis();
+
+            System.out.println("================================================================");
+            System.out.println("Worker node successfully started.");
+            System.out.println("Registered with worker node ID: " + nodeID);
+            System.out.println("Target LoadBalancer address: " + address + ":" + port);
+            System.out.println("================================================================\n");
+
+            Socket socket = new Socket(address, port);
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+
 
             // Register as ready
             writer.println("Connection from node with ID: " + nodeID);
 
-            // wait for job request
-            while(true){
-                String request = reader.readLine(); // e.g. do 13
-                int jobDuration = Integer.parseInt(request.split(" ")[1]);
-                System.out.println("Job received from load balancer with duration: " + jobDuration + " second(s).");
-
-                // execute job
-                executeJob(jobDuration);
-
-                // Register as ready again
-                writer.println("Node with ID " + nodeID + " finished executing job.");
-            }
+            JobExecutor executor = new JobExecutor(socket, nodeID);
+            executor.handleRequest(); // wait for job requests and execute
 
         }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private static void executeJob(int seconds) throws InterruptedException {
-        Thread.sleep(1000 * seconds);
-        System.out.println("Job has been executed.\n");
+        catch (Exception e){ e.printStackTrace(); }
     }
 }

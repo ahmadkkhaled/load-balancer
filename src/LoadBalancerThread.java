@@ -9,7 +9,7 @@ public class LoadBalancerThread extends Thread{
     private PrintWriter writer;
     private BufferedReader reader;
 
-    private synchronized void handleRequest(String jobRequest) throws IOException {
+    private synchronized void handleRequest(String jobRequest) throws IOException { // function is synchronized because it modifies variables shared between threads
 
         if(LoadBalancer.nodes.isEmpty()){
             writer.println("No free nodes available, job request has been dropped");
@@ -19,6 +19,8 @@ public class LoadBalancerThread extends Thread{
         String nodeID = LoadBalancer.nodes.get(LoadBalancer.position);
         if(LoadBalancer.nodeToSocket.containsKey(nodeID)){
             writer.println("Assigning job to node with ID: " + nodeID);
+
+            LoadBalancer.nodeToSenderSocket.put(nodeID, socket);
 
             Socket nodeSocket = LoadBalancer.nodeToSocket.get(nodeID);
             PrintWriter nodeWriter = new PrintWriter(nodeSocket.getOutputStream(), true);
@@ -47,15 +49,15 @@ public class LoadBalancerThread extends Thread{
 
             if(messageFromClient.contains("Sender")){
                 while(true){
-                    writer.println("Awaiting job request...");
-                    String jobRequest = reader.readLine();
+                    if(!LoadBalancer.nodeToSenderSocket.containsValue(socket)){ // if the current job sender isn't waiting for a job to be executed
+                        writer.println("Awaiting job request...");
+                        String jobRequest = reader.readLine();
 
-                    handleRequest(jobRequest);
+                        String duration = jobRequest.split(" ")[1];
+                        System.out.println("Request from Job Sender to execute a job for a duration of: " + duration + " second(s)");
+                        handleRequest(jobRequest);
+                    }
                 }
-            }
-            else if(messageFromClient.contains("finished")){ // a node has finished its job and requests to be added back to the pool of free nodes
-                String nodeID = messageFromClient.split(" ")[3];
-                LoadBalancer.nodeToSocket.put(nodeID, socket);
             }
             else if(messageFromClient.contains("node")){ // a node requests addition to pool of free nodes
                 String nodeID = messageFromClient.split(" ")[5];
@@ -63,9 +65,18 @@ public class LoadBalancerThread extends Thread{
                 LoadBalancer.nodes.add(nodeID);
 
                 while(true){
-                    String response = reader.readLine();
+                    String response = reader.readLine(); // a node has finished executing a job
                     System.out.println(response);
-                    LoadBalancer.nodeToSocket.put(nodeID, socket);
+
+                    // inform job sender that the job has been executed
+                    Socket jobSenderSocket = LoadBalancer.nodeToSenderSocket.get(nodeID);
+                    PrintWriter jobSenderWriter = new PrintWriter(jobSenderSocket.getOutputStream(), true);
+                    jobSenderWriter.println(response);
+
+                    LoadBalancer.nodeToSocket.put(nodeID, socket); // add node back to the pool of free nodes
+
+                    LoadBalancer.nodeToSenderSocket.remove(nodeID);
+
                 }
             }
             else{
