@@ -1,6 +1,7 @@
 import java.io.PrintWriter;
 import java.net.Socket;
 
+
 public class Node {
     public static void main(String[] args) {
         try{
@@ -15,7 +16,7 @@ public class Node {
             String nodeID = "" + System.currentTimeMillis();
 
             System.out.println("================================================================");
-            System.out.println("Worker node successfully started.");
+            System.out.println("Worker node started.");
             System.out.println("Registered with worker node ID: " + nodeID);
             System.out.println("Target LoadBalancer address: " + address + ":" + port);
             System.out.println("================================================================\n");

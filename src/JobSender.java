@@ -23,7 +23,7 @@ public class JobSender {
 
             String jobSenderID = "" + System.currentTimeMillis();
             System.out.println("================================================================");
-            System.out.println("JobSender successfully started.");
+            System.out.println("JobSender started.");
             System.out.println("Registered with JobSender ID: " + jobSenderID);
             System.out.println("Target LoadBalancer address: " + address + ":" + port);
             System.out.println("================================================================\n");

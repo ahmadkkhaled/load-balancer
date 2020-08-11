@@ -27,7 +27,7 @@ public class LoadBalancer {
                 prt = Integer.parseInt(args[0]);
 
             System.out.println("================================================================");
-            System.out.println("LoadBalancer successfully started.");
+            System.out.println("LoadBalancer started.");
             System.out.println("Address: 127.0.0.1 (local host)");
             System.out.println("Port: " + prt);
             System.out.println("================================================================\n");
